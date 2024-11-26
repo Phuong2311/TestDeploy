@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Smart Home Control</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 20px;
+      background-color: #f0f0f0;
+    }
+
+    .switch-container,
+    .sensor-container,
+    .password-container {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-around;
+      margin-bottom: 20px;
+    }
+
+    .switch-item,
+    .sensor-item,
+    .password-section {
+      background-color: white;
+      border-radius: 8px;
+      padding: 15px;
+      margin: 10px;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    .chart-container {
+      display: flex;
+      justify-content: space-around;
+      flex-wrap: wrap;
+    }
+
+    .chart {
+      background-color: white;
+      border-radius: 8px;
+      padding: 15px;
+      margin: 10px;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      width: calc(50% - 20px);
+    }
+
+    input[type="checkbox"] {
+      display: none;
+    }
+
+    label {
+      cursor: pointer;
+      padding: 5px 10px;
+      background-color: #ddd;
+      border-radius: 15px;
+      display: inline-block;
+    }
+
+    input[type="checkbox"]:checked+span {
+      background-color: #4CAF50;
+      color: white;
+    }
+
+    .bulb {
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      display: inline-block;
+      margin-left: 10px;
+    }
+
+    input[type="checkbox"]:checked~.bulb {
+      background-color: yellow;
+      box-shadow: 0 0 10px yellow;
+    }
+
+    #loginForm {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+    }
+
+    #loginForm input,
+    #loginForm button {
+      margin: 10px;
+      padding: 5px;
+    }
+
+    #mainContent {
+      display: none;
+    }
+  </style>
+  <script type="module" src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.esm.js"></script>
+  <script nomodule src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.js"></script>
+  <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+
+<body>
+  <div id="loginForm">
+    <h2>Đăng nhập</h2>
+    <input type="text" id="username" placeholder="Tên đăng nhập" />
+    <input type="password" id="password" placeholder="Mật khẩu" />
+    <button onclick="login()">Đăng nhập</button>
+  </div>
+
+  <div id="mainContent">
+    <div class="switch-container">
+      <div class="switch-item">
+        <span>Đèn Sân Vườn</span>
+        <label>
+          <input type="checkbox" id="light1" onchange="toggleLight('light1', this.checked)" />
+          <span><ion-icon name="bulb-outline"></ion-icon></span>
+          <div class="bulb" id="bulb1"></div>
+        </label>
+      </div>
+      <div class="switch-item">
+        <span>Đèn Phòng Khách</span>
+        <label>
+          <input type="checkbox" id="light2" onchange="toggleLight('light2', this.checked)" />
+          <span><ion-icon name="bulb-outline"></ion-icon></span>
+          <div class="bulb" id="bulb2"></div>
+        </label>
+      </div>
+      <div class="switch-item">
+        <span>Đèn Phòng Ngủ</span>
+        <label>
+          <input type="checkbox" id="light3" onchange="toggleLight('light3', this.checked)" />
+          <span><ion-icon name="bulb-outline"></ion-icon></span>
+          <div class="bulb" id="bulb3"></div>
+        </label>
+      </div>
+    </div>
+
+    <div class="sensor-container">
+      <div class="sensor-item">
+        <span>Nhiệt độ:</span>
+        <span id="temperature">-- °C</span>
+      </div>
+      <div class="sensor-item">
+        <span>Độ ẩm:</span>
+        <span id="humidity">-- %</span>
+      </div>
+    </div>
+
+    <div class="password-container">
+      <div class="password-section">
+        <h2>Nhập mật khẩu mở cửa</h2>
+        <input type="password" id="passwordInput" maxlength="5" placeholder="Nhập mật khẩu" />
+        <button onclick="Nhap_pass()">Gửi</button>
+      </div>
+
+      <div class="password-section">
+        <h2>Đổi mật khẩu</h2>
+        <input type="password" id="oldPasswordInput" maxlength="5" placeholder="Mật khẩu cũ" />
+        <input type="password" id="newPasswordInput" maxlength="5" placeholder="Mật khẩu mới" />
+        <input type="password" id="confirmPasswordInput" maxlength="5" placeholder="Xác nhận mật khẩu mới" />
+        <button onclick="changePassword()">Đổi mật khẩu</button>
+      </div>
+    </div>
+
+    <h3>Biểu đồ Nhiệt độ và Độ ẩm</h3>
+    <div class="chart-container">
+      <div class="chart">
+        <canvas id="temperatureChart"></canvas>
+      </div>
+      <div class="chart">
+        <canvas id="humidityChart"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Login function
+    function login() {
+      const username = document.getElementById('username').value;
+      const password = document.getElementById('password').value;
+
+      if (username === 'admin' && password === 'admin') {
+        localStorage.setItem('isLoggedIn', 'true');
+        showMainContent();
+      } else {
+        alert('Tên đăng nhập hoặc mật khẩu không đúng!');
+      }
+    }
+
+    // Function to show main content
+    function showMainContent() {
+      document.getElementById('loginForm').style.display = 'none';
+      document.getElementById('mainContent').style.display = 'block';
+    }
+
+    // Check login status on page load
+    window.onload = function () {
+      if (localStorage.getItem('isLoggedIn') === 'true') {
+        showMainContent();
+      }
+    }
+
+    // Kết nối đến MQTT broker
+    const client = mqtt.connect("wss://brokernhom1.cloud.shiftr.io:443", {
+      username: "brokernhom1",
+      password: "rI3yLeGJ1tUUUZ9B",
+    });
+
+    client.on("connect", () => {
+      console.log("Đã kết nối đến MQTT broker");
+
+      // Đăng ký các topic để nhận trạng thái bóng đèn và cảm biến
+      client.subscribe("esp32/led1Status");
+      client.subscribe("esp32/led2Status");
+      client.subscribe("esp32/led3Status");
+      client.subscribe("esp32/temperature");
+      client.subscribe("esp32/humidity");
+      client.subscribe("door/password");
+      client.subscribe("door/changePassword");
+      client.subscribe("door/lockInput");
+    });
+
+    let pass_sai = 0;
+
+    // Gửi lệnh điều khiển đèn đến MQTT broker
+    function toggleLight(lightId, state) {
+      const topic = `web/led${lightId.slice(-1)}Control`;
+      const message = state ? "Turn on" : "Turn off";
+      client.publish(topic, message, () => {
+        console.log(`Sent ${message} to ${topic}`);
+      });
+    }
+
+    // Gửi dữ liệu nhập mật khẩu về ESP32
+    function Nhap_pass() {
+      const password = document.getElementById("passwordInput").value;
+      if (password.length === 5) {
+        client.publish("door/password", password);
+        console.log("đã nhập mật khẩu: ", password);
+      } else {
+        console.log("Mật khẩu phải gồm 5 ký tự");
+      }
+    }
+
+    // Gửi yêu cầu thay đổi mật khẩu
+    function changePassword() {
+      const oldPassword = document.getElementById("oldPasswordInput").value;
+      const newPassword = document.getElementById("newPasswordInput").value;
+      const confirmPassword = document.getElementById("confirmPasswordInput").value;
+
+      if (oldPassword.length === 5 && newPassword.length === 5 && newPassword === confirmPassword) {
+        client.publish("door/changePassword", newPassword);
+        console.log("Yêu cầu thay đổi mật khẩu đã được gửi");
+      } else {
+        console.log("Mật khẩu phải gồm 5 ký tự và mật khẩu mới phải trùng khớp");
+      }
+    }
+
+    function loi() {
+      console.log("Mật khẩu sai!");
+      client.publish("door/lockInput", "true");
+      pass_sai = 0;
+    }
+
+    function checkPassword() {
+      const password = document.getElementById("passwordInput").value;
+      if (password !== "correctPassword") {
+        pass_sai++;
+        if (pass_sai >= 3) {
+          loi();
+        }
+      }
+    }
+
+    // Biểu đồ nhiệt độ và độ ẩm
+    let temperatureData = [];
+    let humidityData = [];
+    let labels = [];
+
+    client.on("message", (topic, message) => {
+      const value = parseFloat(message.toString());
+      const currentTime = new Date().toLocaleTimeString();
+
+      // Kiểm tra và cập nhật dữ liệu nhiệt độ
+      if (topic === "esp32/temperature") {
+        document.getElementById("temperature").textContent = `${value} °C`;
+      }
+
+      // Kiểm tra và cập nhật dữ liệu độ ẩm
+      else if (topic === "esp32/humidity") {
+        document.getElementById("humidity").textContent = `${value} %`;
+      }
+
+      if (topic === "esp32/temperature") {
+        temperatureData.push(value);
+        labels.push(currentTime);
+        if (temperatureData.length > 10) {
+          temperatureData.shift();
+          labels.shift();
+        }
+        temperatureChart.update();
+      } else if (topic === "esp32/humidity") {
+        humidityData.push(value);
+        if (humidityData.length > 10) {
+          humidityData.shift();
+        }
+        humidityChart.update();
+      }
+
+      if (topic === "esp32/led1Status" || topic === "esp32/led2Status" || topic === "esp32/led3Status") {
+        const lightId = topic.match(/\d+/)[0];
+        const state = value === "ON";
+        const lightCheckbox = document.getElementById(`light${lightId}`);
+        if (lightCheckbox) {
+          lightCheckbox.checked = state;
+        }
+      }
+
+      if (topic === "door/lockInput" && message.toString() === "true") {
+        setTimeout(() => {
+          document.getElementById("passwordInput").disabled = false;
+          document.getElementById("oldPasswordInput").disabled = false;
+          document.getElementById("newPasswordInput").disabled = false;
+          document.getElementById("confirmPasswordInput").disabled = false;
+        }, 20000);
+      }
+    });
+
+    // Tạo biểu đồ nhiệt độ
+    const temperatureChartCtx = document.getElementById("temperatureChart").getContext("2d");
+    const temperatureChart = new Chart(temperatureChartCtx, {
+      type: "line",
+      data: {
+        labels: labels,
+        datasets: [
+          {
+            label: "Nhiệt độ (°C)",
+            data: temperatureData,
+            borderColor: "rgba(255, 99, 132, 1)",
+            borderWidth: 1,
+            fill: false,
+          },
+        ],
+      },
+    });
+
+    // Tạo biểu đồ độ ẩm
+    const humidityChartCtx = document.getElementById("humidityChart").getContext("2d");
+    const humidityChart = new Chart(humidityChartCtx, {
+      type: "line",
+      data: {
+        labels: labels,
+        datasets: [
+          {
+            label: "Độ ẩm (%)",
+            data: humidityData,
+            borderColor: "rgba(54, 162, 235, 1)",
+            borderWidth: 1,
+            fill: false,
+          },
+        ],
+      },
+    });
+  </script>
+</body>
+
+</html>
