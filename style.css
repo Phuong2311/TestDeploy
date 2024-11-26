@@ -1,0 +1,219 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: center;
+  background: #333;
+  min-height: 100vh;
+  padding: 50px;
+  color: #fff;
+}
+
+.switch-container {
+  display: flex;
+  gap: 50px;
+  margin-bottom: 20px;
+  justify-content: flex-start; /* Di chuyển qua trái */
+  width: 100%; /* Chiếm toàn bộ chiều rộng */
+}
+
+.switch-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+label {
+  position: relative;
+  width: 150px;
+  height: 75px;
+  background: #212121;
+  border-radius: 10px;
+}
+
+label input {
+  appearance: none;
+}
+
+label span {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 75px;
+  height: 75px;
+  background: #333;
+  border: 6px solid #212121;
+  border-radius: 14px;
+  cursor: pointer;
+  transition: 0.5s;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+label input:checked ~ span {
+  left: 75px;
+}
+
+label span ion-icon {
+  color: rgba(255, 255, 255, 0.25);
+  font-size: 2em;
+  transition: 0.5s;
+}
+
+label input:checked ~ span ion-icon {
+  color: rgba(255, 255, 255, 1);
+  filter: drop-shadow(0 0 5px #fff) drop-shadow(0 0 10px #fff)
+    drop-shadow(0 0 15px #fff);
+}
+
+.bulb {
+  position: absolute;
+  top: 80px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100px;
+  height: 100px;
+  pointer-events: none;
+  background: url(bulb_off.jpg);
+  background-size: cover;
+  transition: 0.5s;
+}
+
+label input:checked ~ .bulb {
+  background: url(bulb_on.jpg);
+  background-size: cover;
+}
+
+.sensor-container {
+  display: flex;
+  gap: 20px;
+  margin-top: 47px; /* Giảm khoảng cách xuống */
+  position: absolute;
+  top: 20px; /* Đưa lên trên */
+  margin-left: -100px; /* Điều chỉnh giá trị âm để di chuyển sang trái */
+}
+
+.sensor-item {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  width: 150px; /* Bằng width của label */
+  height: 85px; /* Bằng height của label */
+  background-color: #212121;
+  border: 2px solid #555;
+  border-radius: 10px;
+  color: #fff;
+  font-weight: bold;
+  font-size: 1.2em; /* Tuỳ chỉnh chữ nếu cần */
+}
+
+.password-container {
+  display: flex;
+  gap: 20px; /* Khoảng cách giữa hai phần */
+  justify-content: space-between; /* Đảm bảo các phần tử nằm ngang nhau */
+  align-items: flex-start; /* Căn chỉnh phần tử con theo đầu */
+  margin-left: 1000px; /* Di chuyển qua phải một chút */
+  margin-top: -95px; /* Di chuyển qua phải một chút */
+}
+
+.password-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background-color: #212121;
+  padding: 20px;
+  border-radius: 10px;
+  width: 300px;
+  flex: 1; /* Đảm bảo mỗi phần chiếm không gian bằng nhau */
+}
+
+h2 {
+  color: #fff;
+  font-size: 1.5em;
+  margin-bottom: 10px;
+}
+
+input[type="password"] {
+  width: 100%;
+  padding: 10px;
+  margin: 10px 0;
+  background-color: #333;
+  border: 2px solid #555;
+  border-radius: 10px;
+  color: #fff;
+  font-size: 1em;
+  text-align: center;
+}
+
+button {
+  padding: 10px 20px;
+  background-color: #444;
+  color: #fff;
+  border: 2px solid #555;
+  border-radius: 10px;
+  cursor: pointer;
+  font-weight: bold;
+  font-size: 1em;
+  transition: 0.3s;
+  width: 100%;
+}
+
+button:hover {
+  background-color: #555;
+}
+
+.chart-container {
+  display: flex;
+  justify-content: space-between;
+  gap: 20px;
+}
+
+.chart {
+  width: 48%;
+  height: 500px;
+}
+
+.chart-container {
+  display: flex;
+  justify-content: space-between;
+  gap: 20px;
+  margin-top: 30px;
+  width: 100%;
+}
+
+.chart {
+  width: 48%;
+  height: 500px;
+  background-color: #212121;
+  border: 2px solid #555;
+  border-radius: 10px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  color: #fff;
+  font-weight: bold;
+  font-size: 1.2em;
+  overflow: hidden;
+}
+
+.chart canvas {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.chart:hover {
+  background-color: #333;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  transform: scale(1.05);
+  transition: all 0.3s ease;
+}
+w
